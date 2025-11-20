@@ -5,6 +5,9 @@ __global__ void add(int *a, int *b, int *c) {
     *c = *a + *b;
 }
 
+//device = gpu
+//host = cpu
+
 int main() {
     int a = 2, b = 7;      // host values
     int c;                 // result on host

@@ -1,0 +1,31 @@
+# Ignore everything by default
+*
+# Allow directories so we can whitelist files inside them
+!*/
+# Keep this gitignore itself
+!.gitignore
+
+# Keep source files
+!*.cu
+!*.c
+!*.cpp
+!*.cc
+!*.h
+!*.hpp
+!Makefile
+!CMakeLists.txt
+!README*
+!*.txt
+
+# Explicitly ignore common binary/build artifacts
+*.exe
+*.out
+*.o
+*.obj
+*.a
+*.so
+*.dll
+*.lib
+bin/
+build/
+dist/
