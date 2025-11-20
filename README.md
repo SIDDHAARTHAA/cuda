@@ -1,59 +1,184 @@
 # CUDA Tutorial
 
-A compact, step-by-step CUDA learning codebase. Each folder focuses on one core concept and includes short, clear `.cu` examples that compile and run with `nvcc`.
+This repo teaches CUDA step by step with small `.cu` files you can compile and run.
+Each example focuses on one idea so you don’t get lost in big code.
 
-**Folder structure**
+---
 
-```
-cuda-tutorial/
-    README.md
-    01_hello_world/
-        hello_host.cu
-        hello_device.cu
-    02_vector_add/
-        vector_add_blocks.cu
-        vector_add_threads.cu
-        vector_add_blocks_threads.cu
-    03_shared_memory_stencil/
-        stencil_basic.cu
-        stencil_shared_memory.cu
-    04_sync_and_errors/
-        sync_example.cu
-        error_checking_example.cu
-    05_device_management/
-        device_query.cu
+## What you need
+
+* A system with an NVIDIA GPU
+* CUDA toolkit installed
+* `nvcc` in PATH
+* Linux or WSL is fine
+
+Check your setup:
+
+```bash
+nvcc --version
+nvidia-smi
 ```
 
-**Quick concepts**
+---
 
-- **Host vs Device:** Host = CPU; Device = GPU. Host code runs on CPU and launches kernels that run on the device.
-- **Kernel launch basics:** `kernel<<<gridDim, blockDim>>>(...)` launches work on the GPU.
-- **Blocks and threads:** Threads are grouped into blocks; blocks form a grid. Each thread has `threadIdx`, each block has `blockIdx`.
-- **Global index formula:** `int idx = threadIdx.x + blockIdx.x * blockDim.x;` maps a thread to a unique global index.
-- **Memory management:** Use `cudaMalloc`, `cudaMemcpy`, and `cudaFree` to manage device memory.
-- **Shared memory basics:** Use `extern __shared__` or `__shared__` arrays for fast block-local memory.
-- **Halo concept for stencil:** A halo (ghost) region holds neighbor elements so threads can compute stencils without redundant global loads.
-- **Using `__syncthreads()`:** Synchronizes threads within a block to ensure shared memory writes are visible.
-- **Error checking:** Use `cudaGetLastError()` and `cudaGetErrorString()` to inspect runtime errors.
-- **Device management:** Use `cudaGetDeviceCount()` and `cudaGetDeviceProperties()` to query GPUs.
+## How to build and run
 
-**Build & run (WSL / Linux)**
-
-Compile:
+Compile any file:
 
 ```bash
 nvcc file.cu -o file
 ```
 
-Run:
+Run it:
 
 ```bash
 ./file
 ```
 
-**Notes**
-- All examples are intentionally small to emphasize the single concept they teach.
-- Use `nvcc --help` or `nvcc --version` to verify your CUDA toolchain.
-- If a program fails, check the output of `cudaGetLastError()` (see `04_sync_and_errors/error_checking_example.cu`).
+If it fails, check the last CUDA error:
 
-Explore the folders to study each concept and run examples one by one.
+```cpp
+cudaGetLastError();
+cudaGetErrorString(err);
+```
+
+---
+
+# Concepts you will learn
+
+## 1. Host and device
+
+* Host is CPU.
+* Device is GPU.
+* Each has separate memory.
+* Host code launches GPU kernels.
+
+## 2. Kernels
+
+A kernel is a GPU function marked with:
+
+```cpp
+__global__
+```
+
+You launch it from the CPU with:
+
+```cpp
+kernel<<<blocks, threads>>>();
+```
+
+The CPU does not wait for this by default.
+
+## 3. Blocks and threads
+
+* Threads live inside blocks
+* Blocks form the grid
+* GPU gives you:
+
+  * `blockIdx.x`
+  * `threadIdx.x`
+  * `blockDim.x`
+
+## 4. Global index
+
+Every thread needs a unique job.
+Use this formula:
+
+```cpp
+int idx = threadIdx.x + blockIdx.x * blockDim.x;
+```
+
+## 5. Device memory
+
+You must move data to the GPU:
+
+```cpp
+cudaMalloc(&d_ptr, bytes);
+cudaMemcpy(d_ptr, h_ptr, bytes, cudaMemcpyHostToDevice);
+```
+
+Then move results back.
+
+Free when done:
+
+```cpp
+cudaFree(d_ptr);
+```
+
+## 6. Vector add examples
+
+You will see:
+
+* N blocks, 1 thread each
+* 1 block, N threads
+* Blocks and threads together (the right way)
+
+## 7. Stencils
+
+A stencil uses neighbors:
+
+```
+output[i] = sum of input[i - R] to input[i + R]
+```
+
+This needs many reads, so it benefits from shared memory.
+
+## 8. Shared memory
+
+Shared memory is a fast space used by threads in the same block.
+
+Example:
+
+```cpp
+__shared__ int temp[BLOCK_SIZE + 2 * RADIUS];
+```
+
+Threads load:
+
+* their own values
+* halo values
+  Then they sync and compute.
+
+## 9. Barriers
+
+`__syncthreads()` forces all threads in the block to wait.
+Needed so nobody reads shared memory before it is ready.
+
+## 10. Error handling
+
+You can check what went wrong after a kernel launch:
+
+```cpp
+cudaGetLastError();
+cudaGetErrorString(code);
+```
+
+## 11. Device info
+
+You can query the GPU:
+
+```cpp
+cudaGetDeviceCount(&n);
+cudaGetDeviceProperties(&prop, i);
+```
+
+---
+
+# How to use this repo
+
+Go through folders in order:
+
+1. Hello world
+2. Vector add
+3. Stencil basic
+4. Stencil with shared memory
+5. Sync and error checking
+6. Device info
+
+Run each file.
+Read the comments.
+Change values and see what happens.
+
+This will give you a solid start and real confidence.
+
+---
