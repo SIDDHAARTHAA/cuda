@@ -1,85 +1,59 @@
-# CUDA Programming Tutorial
+# CUDA Tutorial
 
-This repository contains simple CUDA C++ examples to help you get started with GPU programming using NVIDIA's CUDA platform. CUDA allows you to write programs that execute on NVIDIA GPUs, enabling massive parallelism for computationally intensive tasks.
+A compact, step-by-step CUDA learning codebase. Each folder focuses on one core concept and includes short, clear `.cu` examples that compile and run with `nvcc`.
 
-## What is CUDA?
-CUDA (Compute Unified Device Architecture) is a parallel computing platform and API model created by NVIDIA. It enables developers to use C, C++, and Fortran to write programs that run on the GPU, leveraging thousands of cores for high-performance computing.
+**Folder structure**
 
-## Prerequisites
-- NVIDIA GPU with CUDA support
-- CUDA Toolkit installed ([Download here](https://developer.nvidia.com/cuda-downloads))
-- C++ compiler (e.g., MSVC, GCC, Clang)
-
-## File Overview
-- `hello.cu`: Basic "Hello, World!" example using CUDA
-- `device_hello.cu`: Demonstrates device-side printing
-- `add_two.cu`: Adds two numbers using CUDA kernel
-- `add_two/`: (Optional) Directory for extended examples
-
-## How CUDA Works
-1. **Host vs Device**: The CPU is called the "host" and the GPU is the "device".
-2. **Kernels**: Functions executed on the GPU are called kernels. They are launched from the host.
-3. **Memory Management**: Data must be transferred between host and device memory using CUDA API functions.
-4. **Parallel Execution**: Kernels are executed by many threads in parallel.
-
-## Basic Syntax
-
-### 1. Kernel Definition
-```cpp
-__global__ void add(int *a, int *b, int *c) {
-    *c = *a + *b;
-}
 ```
-- `__global__` indicates a function that runs on the device and is called from the host.
-
-### 2. Kernel Launch
-```cpp
-add<<<1, 1>>>(dev_a, dev_b, dev_c);
+cuda-tutorial/
+    README.md
+    01_hello_world/
+        hello_host.cu
+        hello_device.cu
+    02_vector_add/
+        vector_add_blocks.cu
+        vector_add_threads.cu
+        vector_add_blocks_threads.cu
+    03_shared_memory_stencil/
+        stencil_basic.cu
+        stencil_shared_memory.cu
+    04_sync_and_errors/
+        sync_example.cu
+        error_checking_example.cu
+    05_device_management/
+        device_query.cu
 ```
-- `<<<1, 1>>>` specifies the grid and block dimensions (here, 1 block of 1 thread).
 
-### 3. Memory Allocation
-```cpp
-int *dev_a;
-cudaMalloc((void**)&dev_a, sizeof(int));
+**Quick concepts**
+
+- **Host vs Device:** Host = CPU; Device = GPU. Host code runs on CPU and launches kernels that run on the device.
+- **Kernel launch basics:** `kernel<<<gridDim, blockDim>>>(...)` launches work on the GPU.
+- **Blocks and threads:** Threads are grouped into blocks; blocks form a grid. Each thread has `threadIdx`, each block has `blockIdx`.
+- **Global index formula:** `int idx = threadIdx.x + blockIdx.x * blockDim.x;` maps a thread to a unique global index.
+- **Memory management:** Use `cudaMalloc`, `cudaMemcpy`, and `cudaFree` to manage device memory.
+- **Shared memory basics:** Use `extern __shared__` or `__shared__` arrays for fast block-local memory.
+- **Halo concept for stencil:** A halo (ghost) region holds neighbor elements so threads can compute stencils without redundant global loads.
+- **Using `__syncthreads()`:** Synchronizes threads within a block to ensure shared memory writes are visible.
+- **Error checking:** Use `cudaGetLastError()` and `cudaGetErrorString()` to inspect runtime errors.
+- **Device management:** Use `cudaGetDeviceCount()` and `cudaGetDeviceProperties()` to query GPUs.
+
+**Build & run (WSL / Linux)**
+
+Compile:
+
+```bash
+nvcc file.cu -o file
 ```
-- `cudaMalloc` allocates memory on the device.
 
-### 4. Memory Copy
-```cpp
-cudaMemcpy(dev_a, &a, sizeof(int), cudaMemcpyHostToDevice);
+Run:
+
+```bash
+./file
 ```
-- `cudaMemcpy` copies data between host and device.
 
-### 5. Synchronization
-```cpp
-cudaDeviceSynchronize();
-```
-- Ensures all device operations are complete before proceeding.
+**Notes**
+- All examples are intentionally small to emphasize the single concept they teach.
+- Use `nvcc --help` or `nvcc --version` to verify your CUDA toolchain.
+- If a program fails, check the output of `cudaGetLastError()` (see `04_sync_and_errors/error_checking_example.cu`).
 
-## Example: Adding Two Numbers
-See `add_two.cu` for a complete example.
-
-## Compiling and Running
-1. Open a terminal in this directory.
-2. Compile a CUDA file using `nvcc`:
-   ```powershell
-   nvcc add_two.cu -o add_two.exe
-   ```
-3. Run the executable:
-   ```powershell
-   .\add_two.exe
-   ```
-
-## Resources
-- [CUDA C++ Programming Guide](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html)
-- [CUDA Toolkit Documentation](https://docs.nvidia.com/cuda/)
-- [NVIDIA Developer Zone](https://developer.nvidia.com/)
-
-## Notes
-- Always check for errors after CUDA API calls using `cudaGetLastError()`.
-- Use `nvcc` to compile `.cu` files.
-- Grid and block dimensions control parallelism.
-
----
-Feel free to explore the example files and modify them to learn more about CUDA programming!
+Explore the folders to study each concept and run examples one by one.
